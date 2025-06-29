@@ -1,24 +1,29 @@
-
-import { useState } from 'react';
-import { Link, useNavigate, Navigate } from 'react-router-dom';
-import { Eye, EyeOff, Calendar, Mail, Lock, User, Image } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Link, useNavigate, Navigate } from "react-router-dom";
+import { Eye, EyeOff, Calendar, Mail, Lock, User, Image } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    photoURL: ''
+    name: "",
+    email: "",
+    password: "",
+    photoURL: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  
+
   const { register, isLoading, user } = useAuth();
   const navigate = useNavigate();
 
@@ -31,25 +36,25 @@ const Register = () => {
     const newErrors: { [key: string]: string } = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     } else if (formData.name.length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+      newErrors.name = "Name must be at least 2 characters";
     }
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = "Email is invalid";
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     if (formData.photoURL && !isValidUrl(formData.photoURL)) {
-      newErrors.photoURL = 'Please enter a valid URL';
+      newErrors.photoURL = "Please enter a valid URL";
     }
 
     setErrors(newErrors);
@@ -67,15 +72,15 @@ const Register = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -86,14 +91,27 @@ const Register = () => {
       formData.password,
       formData.photoURL
     );
-    
-    if (success) {
-      toast.success('Account created successfully!');
-      navigate('/events');
-    } else {
-      setErrors({ general: 'Email already exists. Please use a different email.' });
-      toast.error('Registration failed. Email might already be in use.');
+
+    try {
+      await register(
+        formData.name,
+        formData.email,
+        formData.password,
+        formData.photoURL
+      );
+    } catch (error: any) {
+      setErrors({ general: error.message });
     }
+
+    // if (success) {
+    //   toast.success("Account created successfully!");
+    //   navigate("/events");
+    // } else {
+    //   setErrors({
+    //     general: "Email already exists. Please use a different email.",
+    //   });
+    //   toast.error("Registration failed. Email might already be in use.");
+    // }
   };
 
   return (
@@ -104,7 +122,7 @@ const Register = () => {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full opacity-20 blur-3xl"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-200 to-blue-200 rounded-full opacity-10 blur-3xl"></div>
       </div>
-      
+
       <Card className="w-full max-w-md relative z-10 bg-white/80 backdrop-blur-lg border border-white/20 shadow-2xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
@@ -119,7 +137,7 @@ const Register = () => {
             Join EventHub and start discovering amazing events
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {errors.general && (
@@ -127,7 +145,7 @@ const Register = () => {
                 <p className="text-red-600 text-sm">{errors.general}</p>
               </div>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <div className="relative">
@@ -139,14 +157,16 @@ const Register = () => {
                   placeholder="Enter your full name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`pl-10 bg-white/50 backdrop-blur-sm ${errors.name ? 'border-red-500' : 'border-gray-200'}`}
+                  className={`pl-10 bg-white/50 backdrop-blur-sm ${
+                    errors.name ? "border-red-500" : "border-gray-200"
+                  }`}
                 />
               </div>
               {errors.name && (
                 <p className="text-red-500 text-sm">{errors.name}</p>
               )}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -158,14 +178,16 @@ const Register = () => {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`pl-10 bg-white/50 backdrop-blur-sm ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
+                  className={`pl-10 bg-white/50 backdrop-blur-sm ${
+                    errors.email ? "border-red-500" : "border-gray-200"
+                  }`}
                 />
               </div>
               {errors.email && (
                 <p className="text-red-500 text-sm">{errors.email}</p>
               )}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
@@ -173,25 +195,31 @@ const Register = () => {
                 <Input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Create a password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`pl-10 pr-10 bg-white/50 backdrop-blur-sm ${errors.password ? 'border-red-500' : 'border-gray-200'}`}
+                  className={`pl-10 pr-10 bg-white/50 backdrop-blur-sm ${
+                    errors.password ? "border-red-500" : "border-gray-200"
+                  }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               {errors.password && (
                 <p className="text-red-500 text-sm">{errors.password}</p>
               )}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="photoURL">Photo URL (Optional)</Label>
               <div className="relative">
@@ -203,26 +231,28 @@ const Register = () => {
                   placeholder="Enter your photo URL"
                   value={formData.photoURL}
                   onChange={handleInputChange}
-                  className={`pl-10 bg-white/50 backdrop-blur-sm ${errors.photoURL ? 'border-red-500' : 'border-gray-200'}`}
+                  className={`pl-10 bg-white/50 backdrop-blur-sm ${
+                    errors.photoURL ? "border-red-500" : "border-gray-200"
+                  }`}
                 />
               </div>
               {errors.photoURL && (
                 <p className="text-red-500 text-sm">{errors.photoURL}</p>
               )}
             </div>
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg"
               disabled={isLoading}
             >
-              {isLoading ? 'Creating account...' : 'Create Account'}
+              {isLoading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
-          
+
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link
                 to="/login"
                 className="font-medium text-purple-600 hover:text-purple-500 transition-colors"
@@ -231,7 +261,7 @@ const Register = () => {
               </Link>
             </p>
           </div>
-          
+
           <div className="mt-4 text-center">
             <Link
               to="/"

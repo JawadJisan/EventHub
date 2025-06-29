@@ -1,36 +1,99 @@
-
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Navbar } from '@/components/Navbar';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { CalendarDays, MapPin, Users, Plus } from 'lucide-react';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Navbar } from "@/components/Navbar";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { CalendarDays, MapPin, Users, Plus } from "lucide-react";
+import axios from "axios";
+import api from "@/utils/axios";
 
 const AddEvent = () => {
   const [formData, setFormData] = useState({
-    title: '',
-    organizer: '',
-    date: '',
-    time: '',
-    location: '',
-    description: '',
+    title: "",
+    organizer: "",
+    date: "",
+    time: "",
+    location: "",
+    description: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+
+  //   try {
+  //     // Validate form
+  //     if (
+  //       !formData.title ||
+  //       !formData.organizer ||
+  //       !formData.date ||
+  //       !formData.time ||
+  //       !formData.location ||
+  //       !formData.description
+  //     ) {
+  //       toast.error("Please fill in all fields");
+  //       return;
+  //     }
+
+  //     // Create new event object
+  //     const newEvent = {
+  //       id: Date.now().toString(),
+  //       ...formData,
+  //       attendeeCount: 0,
+  //       joinedUsers: [],
+  //       createdBy: user?.id || "",
+  //       createdAt: new Date().toISOString(),
+  //     };
+
+  //     console.log("New Event Data:", newEvent);
+
+  //     // Get existing events from localStorage
+  //     const existingEvents = JSON.parse(localStorage.getItem("events") || "[]");
+
+  //     // Add new event
+  //     const updatedEvents = [...existingEvents, newEvent];
+
+  //     // Save to localStorage
+  //     localStorage.setItem("events", JSON.stringify(updatedEvents));
+
+  //     toast.success("Event created successfully!");
+
+  //     // Reset form
+  //     setFormData({
+  //       title: "",
+  //       organizer: "",
+  //       date: "",
+  //       time: "",
+  //       location: "",
+  //       description: "",
+  //     });
+
+  //     // Navigate to events page
+  //     navigate("/events");
+  //   } catch (error) {
+  //     toast.error("Failed to create event. Please try again.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,46 +101,42 @@ const AddEvent = () => {
 
     try {
       // Validate form
-      if (!formData.title || !formData.organizer || !formData.date || !formData.time || !formData.location || !formData.description) {
-        toast.error('Please fill in all fields');
+      if (
+        !formData.title ||
+        !formData.organizer ||
+        !formData.date ||
+        !formData.time ||
+        !formData.location ||
+        !formData.description
+      ) {
+        toast.error("Please fill in all fields");
+        setIsLoading(false);
         return;
       }
 
       // Create new event object
       const newEvent = {
-        id: Date.now().toString(),
         ...formData,
-        attendeeCount: 0,
-        joinedUsers: [],
-        createdBy: user?.id || '',
-        createdAt: new Date().toISOString()
+        // createdBy will be added by backend from token
       };
-
-      // Get existing events from localStorage
-      const existingEvents = JSON.parse(localStorage.getItem('events') || '[]');
-      
-      // Add new event
-      const updatedEvents = [...existingEvents, newEvent];
-      
-      // Save to localStorage
-      localStorage.setItem('events', JSON.stringify(updatedEvents));
-
-      toast.success('Event created successfully!');
-      
+      // API call to create event
+      const response = await api.post("/events", newEvent);
+      console.log("Event created response:", response);
+      toast.success("Event created successfully!");
       // Reset form
       setFormData({
-        title: '',
-        organizer: '',
-        date: '',
-        time: '',
-        location: '',
-        description: '',
+        title: "",
+        organizer: "",
+        date: "",
+        time: "",
+        location: "",
+        description: "",
       });
 
-      // Navigate to events page
-      navigate('/events');
+      navigate("/events");
     } catch (error) {
-      toast.error('Failed to create event. Please try again.');
+      console.error("Event creation failed:", error);
+      toast.error("Failed to create event. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -86,12 +145,15 @@ const AddEvent = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <Navbar />
-      
+
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Create New Event</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Create New Event
+          </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Share your amazing event with the community. Fill in the details below to get started.
+            Share your amazing event with the community. Fill in the details
+            below to get started.
           </p>
         </div>
 
@@ -106,7 +168,10 @@ const AddEvent = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="title"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Event Title *
                   </Label>
                   <Input
@@ -122,7 +187,10 @@ const AddEvent = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="organizer" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="organizer"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Organizer Name *
                   </Label>
                   <Input
@@ -140,7 +208,10 @@ const AddEvent = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="date" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Label
+                    htmlFor="date"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
                     <CalendarDays className="h-4 w-4 text-purple-600" />
                     Event Date *
                   </Label>
@@ -156,7 +227,10 @@ const AddEvent = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="time" className="text-sm font-medium text-gray-700">
+                  <Label
+                    htmlFor="time"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Event Time *
                   </Label>
                   <Input
@@ -172,7 +246,10 @@ const AddEvent = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Label
+                  htmlFor="location"
+                  className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                >
                   <MapPin className="h-4 w-4 text-purple-600" />
                   Location *
                 </Label>
@@ -189,7 +266,10 @@ const AddEvent = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="description"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Event Description *
                 </Label>
                 <Textarea

@@ -122,13 +122,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, photoURL }),
       });
 
       const data = await response.json();
+      console.log("Register response status:", data);
 
       if (!response.ok) {
         throw new Error(data.error || "Registration failed");
@@ -141,8 +142,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setToken(data.token);
       setUser(data.user);
       toast.success("Registration successful!");
-      navigate("/events");
+      navigate("/");
     } catch (error: any) {
+      console.log("error:", error);
       toast.error(error.message || "Registration failed. Please try again.");
       throw error;
     } finally {

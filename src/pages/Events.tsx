@@ -1,160 +1,192 @@
-
-import { useState, useEffect } from 'react';
-import { Calendar, MapPin, Users, Clock, Search, Filter, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Navbar } from '@/components/Navbar';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from "react";
+import {
+  Calendar,
+  MapPin,
+  Users,
+  Clock,
+  Search,
+  Filter,
+  Plus,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Navbar } from "@/components/Navbar";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { getEvents } from "@/utils/apis";
+import Pagination from "@/components/Pagination";
+import { debounce } from "lodash";
 
 interface Event {
-  id: string;
+  _id: string;
   title: string;
   organizer: string;
   date: string;
-  time: string;
   location: string;
   description: string;
   attendeeCount: number;
-  joinedUsers: string[];
   createdBy: string;
+  time: string;
+  joined: boolean;
 }
 
 const Events = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalEvents: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
   const { user } = useAuth();
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
+  // Debounced fetch function
+  const fetchEvents = useCallback(
+    debounce(async (search: string, filter: string, page: number) => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-  useEffect(() => {
-    filterEvents();
-  }, [events, searchTerm, dateFilter]);
+        const params: Record<string, string | number> = {
+          page,
+          limit: 6, // 6 events per page
+          search,
+          dateFilter: filter === "all" ? undefined : filter,
+        };
 
-  const loadEvents = () => {
-    setIsLoading(true);
-    const storedEvents = localStorage.getItem('events');
-    if (storedEvents) {
-      const parsedEvents = JSON.parse(storedEvents);
-      // Sort by date and time (most recent first)
-      const sortedEvents = parsedEvents.sort((a: Event, b: Event) => {
-        const dateA = new Date(`${a.date} ${a.time}`);
-        const dateB = new Date(`${b.date} ${b.time}`);
-        return dateB.getTime() - dateA.getTime();
-      });
-      setEvents(sortedEvents);
-    }
-    setIsLoading(false);
+        const data = await getEvents(params);
+
+        // Add joined status for each event
+        const eventsWithStatus = data.events.map((event: Event) => ({
+          ...event,
+          joined: user ? event.attendees?.includes(user.id) : false,
+        }));
+
+        setEvents(eventsWithStatus);
+        setPagination({
+          currentPage: data.pagination.currentPage,
+          totalPages: data.pagination.totalPages,
+          totalEvents: data.pagination.totalEvents,
+          hasNextPage: data.pagination.hasNextPage,
+          hasPreviousPage: data.pagination.hasPreviousPage,
+        });
+      } catch (err) {
+        setError("Failed to load events. Please try again later.");
+        console.error("Events fetch error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 500), // 500ms debounce delay
+    [user]
+  );
+
+  // Fetch events when filters or page change
+  useEffect(() => {
+    fetchEvents(searchTerm, dateFilter, pagination.currentPage);
+  }, [searchTerm, dateFilter, pagination.currentPage, fetchEvents]);
+
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
 
-  const filterEvents = () => {
-    let filtered = events;
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filter by date
-    if (dateFilter !== 'all') {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      filtered = filtered.filter(event => {
-        const eventDate = new Date(event.date);
-        
-        switch (dateFilter) {
-          case 'today':
-            return eventDate.toDateString() === today.toDateString();
-          case 'current-week':
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay());
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
-            return eventDate >= startOfWeek && eventDate <= endOfWeek;
-          case 'last-week':
-            const lastWeekStart = new Date(today);
-            lastWeekStart.setDate(today.getDate() - today.getDay() - 7);
-            const lastWeekEnd = new Date(lastWeekStart);
-            lastWeekEnd.setDate(lastWeekStart.getDate() + 6);
-            return eventDate >= lastWeekStart && eventDate <= lastWeekEnd;
-          case 'current-month':
-            return eventDate.getMonth() === today.getMonth() && 
-                   eventDate.getFullYear() === today.getFullYear();
-          case 'last-month':
-            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            return eventDate.getMonth() === lastMonth.getMonth() && 
-                   eventDate.getFullYear() === lastMonth.getFullYear();
-          default:
-            return true;
-        }
-      });
-    }
-
-    setFilteredEvents(filtered);
+  // Handle date filter change
+  const handleFilterChange = (value: string) => {
+    setDateFilter(value);
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
 
-  const handleJoinEvent = (eventId: string) => {
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setDateFilter("all");
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setPagination((prev) => ({ ...prev, currentPage: page }));
+  };
+
+  // Handle join event
+  const handleJoinEvent = async (eventId: string) => {
     if (!user) return;
 
-    const updatedEvents = events.map(event => {
-      if (event.id === eventId) {
-        const joinedUsers = event.joinedUsers || [];
-        if (!joinedUsers.includes(user.id)) {
-          return {
-            ...event,
-            attendeeCount: event.attendeeCount + 1,
-            joinedUsers: [...joinedUsers, user.id]
-          };
-        }
-      }
-      return event;
-    });
+    try {
+      // In a real app, you would call an API endpoint to join the event
+      // For now, we'll simulate the join action
+      setEvents((prevEvents) =>
+        prevEvents.map((event) => {
+          if (event._id === eventId && !event.joined) {
+            return {
+              ...event,
+              attendeeCount: event.attendeeCount + 1,
+              joined: true,
+            };
+          }
+          return event;
+        })
+      );
 
-    setEvents(updatedEvents);
-    localStorage.setItem('events', JSON.stringify(updatedEvents));
-    toast.success('Successfully joined the event!');
+      toast.success("Successfully joined the event!");
+    } catch (err) {
+      toast.error("Failed to join event. Please try again.");
+      console.error("Join event error:", err);
+    }
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const formatTime = (time: string) => {
-    return new Date(`2000-01-01 ${time}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
-  const canJoinEvent = (event: Event) => {
-    if (!user) return false;
-    const joinedUsers = event.joinedUsers || [];
-    return !joinedUsers.includes(user.id);
+  // Format time
+  const formatTime = (timeString: string) => {
+    return new Date(`2000-01-01T${timeString}:00`).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
-  if (isLoading) {
+  // Check if any filters are active
+  const areFiltersActive = searchTerm || dateFilter !== "all";
+
+  if (isLoading && !events.length) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
         <Navbar />
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-[70vh]">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
         </div>
       </div>
@@ -164,13 +196,16 @@ const Events = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <Navbar />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Discover Events</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Discover Events
+          </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Find amazing events happening around you. Join the community and create unforgettable memories.
+            Find amazing events happening around you. Join the community and
+            create unforgettable memories.
           </p>
         </div>
 
@@ -183,13 +218,14 @@ const Events = () => {
                 type="text"
                 placeholder="Search events by title..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
                 className="pl-10"
               />
             </div>
+
             <div className="flex gap-2">
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-48">
+              <Select value={dateFilter} onValueChange={handleFilterChange}>
+                <SelectTrigger className="min-w-[180px]">
                   <Filter className="mr-2 h-4 w-4" />
                   <SelectValue placeholder="Filter by date" />
                 </SelectTrigger>
@@ -200,8 +236,22 @@ const Events = () => {
                   <SelectItem value="last-week">Last Week</SelectItem>
                   <SelectItem value="current-month">Current Month</SelectItem>
                   <SelectItem value="last-month">Last Month</SelectItem>
+                  <SelectItem value="upcoming">Upcoming Events</SelectItem>
+                  <SelectItem value="past">Past Events</SelectItem>
                 </SelectContent>
               </Select>
+
+              {areFiltersActive && (
+                <Button
+                  variant="outline"
+                  onClick={clearFilters}
+                  className="border-red-300 text-red-500 hover:bg-red-50 hover:text-red-600"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Clear Filters
+                </Button>
+              )}
+
               <Link to="/add-event">
                 <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
                   <Plus className="mr-2 h-4 w-4" />
@@ -212,73 +262,151 @@ const Events = () => {
           </div>
         </div>
 
+        {/* Filter Status */}
+        {areFiltersActive && (
+          <div className="mb-6 flex items-center flex-wrap gap-2">
+            <Badge variant="secondary" className="py-1 px-3">
+              {pagination.totalEvents} events found
+            </Badge>
+
+            {searchTerm && (
+              <Badge className="py-1 px-3 flex items-center">
+                Search: "{searchTerm}"
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="ml-2 hover:text-red-500"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+
+            {dateFilter !== "all" && (
+              <Badge className="py-1 px-3 flex items-center">
+                {dateFilter === "today" && "Today"}
+                {dateFilter === "current-week" && "This Week"}
+                {dateFilter === "last-week" && "Last Week"}
+                {dateFilter === "current-month" && "This Month"}
+                {dateFilter === "last-month" && "Last Month"}
+                {dateFilter === "upcoming" && "Upcoming"}
+                {dateFilter === "past" && "Past"}
+                <button
+                  onClick={() => setDateFilter("all")}
+                  className="ml-2 hover:text-red-500"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <div className="flex items-center">
+              <X className="h-5 w-5 mr-2" />
+              {error}
+            </div>
+          </div>
+        )}
+
         {/* Events Grid */}
-        {filteredEvents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map((event) => (
-              <Card key={event.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 shadow-lg">
-                <CardHeader className="pb-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <Badge className="bg-purple-100 text-purple-800">
-                      Event
-                    </Badge>
-                    <div className="text-right text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {formatDate(event.date)}
+        {events.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {events.map((event) => (
+                <Card
+                  key={event._id}
+                  className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 shadow-lg flex flex-col h-full"
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge className="bg-purple-100 text-purple-800">
+                        Event
+                      </Badge>
+                      <div className="text-right text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {formatDate(event.date)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
-                    {event.title}
-                  </CardTitle>
-                  <p className="text-sm text-gray-600">by {event.organizer}</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 mb-4 line-clamp-3">{event.description}</p>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Clock className="h-4 w-4 mr-2 text-purple-500" />
-                      {formatTime(event.time)}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="h-4 w-4 mr-2 text-purple-500" />
-                      {event.location}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Users className="h-4 w-4 mr-2 text-purple-500" />
-                      {event.attendeeCount} attendees
-                    </div>
-                  </div>
+                    <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
+                      {event.title}
+                    </CardTitle>
+                    <CardDescription className="text-sm text-gray-600">
+                      by {event.organizer}
+                    </CardDescription>
+                  </CardHeader>
 
-                  <Button
-                    onClick={() => handleJoinEvent(event.id)}
-                    disabled={!canJoinEvent(event)}
-                    className={`w-full ${
-                      canJoinEvent(event)
-                        ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    {canJoinEvent(event) ? 'Join Event' : 'Already Joined'}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <CardContent className="flex-grow">
+                    <p className="text-gray-700 mb-4 line-clamp-3">
+                      {event.description}
+                    </p>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Clock className="h-4 w-4 mr-2 text-purple-500" />
+                        {formatTime(event.time)}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="h-4 w-4 mr-2 text-purple-500" />
+                        <span className="line-clamp-1">{event.location}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Users className="h-4 w-4 mr-2 text-purple-500" />
+                        {event.attendeeCount} attendees
+                      </div>
+                    </div>
+                  </CardContent>
+
+                  <CardFooter className="mt-auto">
+                    <Button
+                      onClick={() => handleJoinEvent(event._id)}
+                      disabled={event.joined}
+                      className={`w-full ${
+                        event.joined
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                      }`}
+                    >
+                      {event.joined ? "Already Joined" : "Join Event"}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalEvents}
+              onPageChange={handlePageChange}
+            />
+          </>
         ) : (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white rounded-xl shadow-lg">
             <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              {searchTerm || dateFilter !== 'all' ? 'No events found' : 'No events yet'}
+              {searchTerm || dateFilter !== "all"
+                ? "No events found"
+                : "No events yet"}
             </h3>
             <p className="text-gray-500 mb-6">
-              {searchTerm || dateFilter !== 'all' 
-                ? 'Try adjusting your search or filter criteria'
-                : 'Be the first to create an amazing event!'
-              }
+              {searchTerm || dateFilter !== "all"
+                ? "Try adjusting your search or filter criteria"
+                : "Be the first to create an amazing event!"}
             </p>
+
+            {areFiltersActive ? (
+              <Button onClick={clearFilters} variant="outline" className="mr-2">
+                <X className="mr-2 h-4 w-4" />
+                Clear Filters
+              </Button>
+            ) : null}
+
             <Link to="/add-event">
               <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
                 <Plus className="mr-2 h-4 w-4" />
