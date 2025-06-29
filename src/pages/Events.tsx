@@ -171,13 +171,37 @@ const Events = () => {
   };
 
   // Format time
-  const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}:00`).toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  // const formatTime = (timeString: string) => {
+  //   return new Date(`2000-01-01T${timeString}:00`).toLocaleTimeString("en-US", {
+  //     hour: "numeric",
+  //     minute: "2-digit",
+  //     hour12: true,
+  //   });
+  // };
+
+  // const formatTime = (timeString: string) => {
+  //   // Convert UTC time to local time
+  //   const date = new Date(`2000-01-01T${timeString}:00Z`);
+  //   return date.toLocaleTimeString("en-US", {
+  //     hour: "numeric",
+  //     minute: "2-digit",
+  //     hour12: true,
+  //     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  //   });
+  // };
+
+  function to12Hour(iso: string): string {
+    // grab "HH:MM"
+    const timePart = iso.split("T")[1].slice(0, 5);
+    let [h, m] = timePart.split(":").map(Number);
+
+    const suffix = h < 12 ? "AM" : "PM";
+    h = h % 12 || 12; // convert 0→12, 13→1, etc.
+
+    // pad minutes if needed
+    const mm = m.toString().padStart(2, "0");
+    return `${h}:${mm} ${suffix}`;
+  }
 
   // Check if any filters are active
   const areFiltersActive = searchTerm || dateFilter !== "all";
@@ -348,7 +372,9 @@ const Events = () => {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center text-sm text-gray-600">
                         <Clock className="h-4 w-4 mr-2 text-purple-500" />
-                        {formatTime(event.time)}
+                        {/* {formatTime(event.time)} */}
+                        {/* {formatTime(event.date)} */}
+                        {to12Hour(event?.date)}
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <MapPin className="h-4 w-4 mr-2 text-purple-500" />
