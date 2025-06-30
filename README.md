@@ -52,6 +52,7 @@ EventHub is a comprehensive event management web application built with modern t
 - **Event Details (/events/:id)** - Detailed view of individual events
 - **Add Event (/add-event)** - Create new events
 - **My Events (/my-events)** - Manage user's created events
+- **Update Events (/update-events)** - Manage user's created events
 
 ## 🛠️ Technologies Used
 
@@ -188,11 +189,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 📞 Support
 
 For support and questions:
-- Email: hello@eventhub.com
-- Documentation: [EventHub Docs](https://docs.eventhub.com)
-- Community: [Discord Server](https://discord.gg/eventhub)
+- Email: jisan.sc@gmail.com
 
 ---
 
-Made with ❤️ by the EventHub team. Happy event planning! 🎉
+Made by Jawad Jisan. Happy event planning! 🎉
 # EventHub

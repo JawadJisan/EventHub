@@ -74,3 +74,13 @@ export const updateEvent = async (eventId: string, eventData: any) => {
     throw error.response?.data || { error: "Network error" };
   }
 };
+
+// Get latest 3 events (no auth required)
+export const getLatestEvents = async () => {
+  try {
+    const response = await api.get("/events/latest");
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: "Network error" };
+  }
+};
