@@ -432,7 +432,10 @@ const MyEvents = () => {
                         </Button>
                       </Link>
 
-                      <Link to={`/edit-event/${event._id}`} className="flex-1">
+                      <Link
+                        to={`/update-event/${event._id}`}
+                        className="flex-1"
+                      >
                         <Button
                           variant="outline"
                           size="sm"

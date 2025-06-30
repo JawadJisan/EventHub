@@ -8,6 +8,7 @@ import {
   Filter,
   Plus,
   X,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,7 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getEvents, joinEvent } from "@/utils/apis";
 import Pagination from "@/components/Pagination";
 import { debounce } from "lodash";
@@ -63,6 +64,7 @@ const Events = () => {
   });
   const { user } = useAuth();
   const [isJoining, setIsJoining] = useState(false);
+  const navigate = useNavigate();
 
   // Debounced fetch function
   const fetchEvents = useCallback(
@@ -342,71 +344,131 @@ const Events = () => {
         {events.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {events.map((event) => (
-                <Card
-                  key={event._id}
-                  className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 shadow-lg flex flex-col h-full"
-                >
-                  <CardHeader className="pb-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge className="bg-purple-100 text-purple-800">
-                        Event
-                      </Badge>
-                      <div className="text-right text-sm text-gray-500">
+              {events.map((event) => {
+                // Determine event status
+                const now = new Date();
+                const eventDate = new Date(event.date);
+                let status = "";
+                let statusClass = "";
+
+                if (eventDate < now) {
+                  status = "Passed";
+                  statusClass = "bg-gray-100 text-gray-800";
+                } else if (eventDate.toDateString() === now.toDateString()) {
+                  status = "Ongoing";
+                  statusClass = "bg-blue-100 text-blue-800";
+                } else {
+                  status = "Upcoming";
+                  statusClass = "bg-green-100 text-green-800";
+                }
+
+                return (
+                  <Card
+                    key={event._id}
+                    className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 shadow-lg flex flex-col h-full"
+                  >
+                    <CardHeader className="pb-4">
+                      {/* <div className="flex justify-between items-start mb-2">
+                        <Badge className={`${statusClass} font-medium`}>
+                          {status}
+                        </Badge>
                         <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {formatDate(event.date)}
+                          <button
+                            onClick={() => navigate(`/events/${event._id}`)}
+                            className="text-gray-500 hover:text-purple-600 transition-colors mr-2"
+                            title="View details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <div className="text-right text-sm text-gray-500">
+                            <div className="flex items-center">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              {formatDate(event.date)}
+                            </div>
+                          </div>
+                        </div>
+                      </div> */}
+                      <div className="flex justify-between items-center mb-2">
+                        {/* Status badge */}
+                        <Badge
+                          className={`${statusClass} font-medium text-sm px-3 py-1 rounded-lg`}
+                        >
+                          {status}
+                        </Badge>
+
+                        {/* Right section: Date + Eye icon */}
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          {/* Date */}
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                            <span>{formatDate(event.date)}</span>
+                          </div>
+
+                          {/* Eye button */}
+                          <button
+                            onClick={() => navigate(`/events/${event._id}`)}
+                            className="text-gray-500 hover:text-purple-600 transition-colors p-1 rounded hover:bg-gray-100"
+                            title="View details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
-                    </div>
-                    <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
-                      {event.title}
-                    </CardTitle>
-                    <CardDescription className="text-sm text-gray-600">
-                      {/* by {event.organizer} */}
-                      by {event.createdBy.name}
-                    </CardDescription>
-                  </CardHeader>
 
-                  <CardContent className="flex-grow">
-                    <p className="text-gray-700 mb-4 line-clamp-3">
-                      {event.description}
-                    </p>
+                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
+                        {event.title}
+                      </CardTitle>
+                      <CardDescription className="text-sm text-gray-600">
+                        by {event.createdBy.name}
+                      </CardDescription>
+                    </CardHeader>
 
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Clock className="h-4 w-4 mr-2 text-purple-500" />
-                        {/* {formatTime(event.time)} */}
-                        {/* {formatTime(event.date)} */}
-                        {to12Hour(event?.date)}
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="h-4 w-4 mr-2 text-purple-500" />
-                        <span className="line-clamp-1">{event.location}</span>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Users className="h-4 w-4 mr-2 text-purple-500" />
-                        {event.attendeeCount} attendees
-                      </div>
-                    </div>
-                  </CardContent>
+                    <CardContent className="flex-grow">
+                      <p className="text-gray-700 mb-4 line-clamp-3">
+                        {event.description}
+                      </p>
 
-                  <CardFooter className="mt-auto">
-                    <Button
-                      onClick={() => handleJoinEvent(event._id)}
-                      // disabled={event.joined}
-                      disabled={isJoining || event.joined}
-                      className={`w-full ${
-                        event.joined
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                      }`}
-                    >
-                      {event.joined ? "Already Joined" : "Join Event"}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Clock className="h-4 w-4 mr-2 text-purple-500" />
+                          {to12Hour(event.date)}
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <MapPin className="h-4 w-4 mr-2 text-purple-500" />
+                          <span className="line-clamp-1">{event.location}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Users className="h-4 w-4 mr-2 text-purple-500" />
+                          {event.attendeeCount} attendees
+                        </div>
+                      </div>
+                    </CardContent>
+
+                    <CardFooter className="mt-auto">
+                      <Button
+                        onClick={() => handleJoinEvent(event._id)}
+                        disabled={isJoining || event.joined}
+                        className={`w-full ${
+                          event.joined
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                        }`}
+                      >
+                        {isJoining ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Joining...
+                          </div>
+                        ) : event.joined ? (
+                          "Already Joined"
+                        ) : (
+                          "Join Event"
+                        )}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
 
             {/* Pagination */}

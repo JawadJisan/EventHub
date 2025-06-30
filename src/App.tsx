@@ -13,6 +13,7 @@ import Register from "./pages/Register";
 import EventDetails from "./pages/EventDetails";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
+import UpdateEvent from "./pages/UpdateEvent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,6 +54,14 @@ const SessionHandler = () => {
         element={
           <ProtectedRoute>
             <AddEvent />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/update-event/:id"
+        element={
+          <ProtectedRoute>
+            <UpdateEvent />
           </ProtectedRoute>
         }
       />

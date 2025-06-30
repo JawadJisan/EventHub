@@ -64,3 +64,13 @@ export const joinEvent = async (eventId: string) => {
     throw error.response?.data || { error: "Network error" };
   }
 };
+
+// Update event
+export const updateEvent = async (eventId: string, eventData: any) => {
+  try {
+    const response = await api.put(`/events/update/${eventId}`, eventData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: "Network error" };
+  }
+};

@@ -343,15 +343,15 @@ const EventDetails = () => {
                           asChild
                           className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-14"
                         >
-                          <Link to={`/edit-event/${event._id}`}>
+                          <Link to={`/update-event/${event._id}`}>
                             <Edit className="h-5 w-5 mr-2" />
                             Edit Event
                           </Link>
                         </Button>
-                        <Button variant="destructive" className="flex-1 h-14">
+                        {/* <Button variant="destructive" className="flex-1 h-14">
                           <Trash2 className="h-5 w-5 mr-2" />
                           Delete
-                        </Button>
+                        </Button> */}
                       </div>
                     )}
                   </div>
