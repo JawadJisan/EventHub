@@ -99,7 +99,7 @@ const Events = () => {
       } finally {
         setIsLoading(false);
       }
-    }, 500), // 500ms debounce delay
+    }, 1000), // 500ms debounce delay // 2000 for 2 seconds
     [user]
   );
 
@@ -360,7 +360,8 @@ const Events = () => {
                       {event.title}
                     </CardTitle>
                     <CardDescription className="text-sm text-gray-600">
-                      by {event.organizer}
+                      {/* by {event.organizer} */}
+                      by {event.createdBy.name}
                     </CardDescription>
                   </CardHeader>
 
