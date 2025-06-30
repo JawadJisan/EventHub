@@ -44,3 +44,23 @@ export const deleteEvent = async (eventId: string) => {
     throw error.response?.data || { error: "Network error" };
   }
 };
+
+// Get single event by ID
+export const getEventById = async (eventId: string) => {
+  try {
+    const response = await api.get(`/events/get/${eventId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: "Network error" };
+  }
+};
+
+// Join event
+export const joinEvent = async (eventId: string) => {
+  try {
+    const response = await api.put(`/events/join/${eventId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { error: "Network error" };
+  }
+};

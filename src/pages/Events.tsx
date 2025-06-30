@@ -31,7 +31,7 @@ import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import { getEvents } from "@/utils/apis";
+import { getEvents, joinEvent } from "@/utils/apis";
 import Pagination from "@/components/Pagination";
 import { debounce } from "lodash";
 
@@ -62,6 +62,7 @@ const Events = () => {
     hasPreviousPage: false,
   });
   const { user } = useAuth();
+  const [isJoining, setIsJoining] = useState(false);
 
   // Debounced fetch function
   const fetchEvents = useCallback(
@@ -80,9 +81,15 @@ const Events = () => {
         const data = await getEvents(params);
 
         // Add joined status for each event
+        // const eventsWithStatus = data.events.map((event: Event) => ({
+        //   ...event,
+        //   joined: user ? event.attendees?.includes(user.id) : false,
+        // }));
         const eventsWithStatus = data.events.map((event: Event) => ({
           ...event,
-          joined: user ? event.attendees?.includes(user.id) : false,
+          joined: user
+            ? event.attendees?.some((att) => att._id === user.id)
+            : false,
         }));
 
         setEvents(eventsWithStatus);
@@ -134,28 +141,22 @@ const Events = () => {
 
   // Handle join event
   const handleJoinEvent = async (eventId: string) => {
-    if (!user) return;
-
+    if (!user && !eventId) return;
+    setIsJoining(true);
     try {
-      // In a real app, you would call an API endpoint to join the event
-      // For now, we'll simulate the join action
-      setEvents((prevEvents) =>
-        prevEvents.map((event) => {
-          if (event._id === eventId && !event.joined) {
-            return {
-              ...event,
-              attendeeCount: event.attendeeCount + 1,
-              joined: true,
-            };
-          }
-          return event;
-        })
-      );
-
+      const response = await joinEvent(eventId);
       toast.success("Successfully joined the event!");
-    } catch (err) {
-      toast.error("Failed to join event. Please try again.");
-      console.error("Join event error:", err);
+      fetchEvents(searchTerm, dateFilter, pagination.currentPage);
+    } catch (error) {
+      console.error("Error joining event:", error);
+
+      if (error.error === "Already joined this event") {
+        toast.info("You have already joined this event");
+      } else {
+        toast.error(error.error || "Failed to join event");
+      }
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -216,6 +217,8 @@ const Events = () => {
       </div>
     );
   }
+
+  console.log("All Events:", events);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
@@ -391,7 +394,8 @@ const Events = () => {
                   <CardFooter className="mt-auto">
                     <Button
                       onClick={() => handleJoinEvent(event._id)}
-                      disabled={event.joined}
+                      // disabled={event.joined}
+                      disabled={isJoining || event.joined}
                       className={`w-full ${
                         event.joined
                           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
