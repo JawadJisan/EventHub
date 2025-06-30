@@ -27,7 +27,7 @@ import { toast } from "sonner";
 
 // Create axios instance
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://event-hub-server-alpha.vercel.app/api",
 });
 
 // Inject bearer token on every request
