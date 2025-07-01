@@ -251,6 +251,34 @@ const MyEvents = () => {
     }
   };
 
+  // Utility function (no changes needed)
+  const isSameDay = (date1: Date, date2: Date) => {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  };
+
+  // Revised status function (use this)
+  const getEventStatus = (eventDate: Date) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const eventDay = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate()
+    );
+
+    if (eventDay < today) {
+      return { status: "Passed", class: "bg-gray-100 text-gray-800" };
+    } else if (eventDay.getTime() === today.getTime()) {
+      return { status: "Ongoing", class: "bg-blue-100 text-blue-800" };
+    } else {
+      return { status: "Upcoming", class: "bg-green-100 text-green-800" };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <Navbar />
@@ -373,113 +401,134 @@ const MyEvents = () => {
         {events.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {events.map((event) => (
-                <Card
-                  key={event._id}
-                  className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 shadow-lg flex flex-col h-full"
-                >
-                  <CardHeader className="pb-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge className="bg-purple-100 text-purple-800">
-                        Event
-                      </Badge>
-                      <div className="text-right text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {formatDate(event.date)}
+              {events.map((event) => {
+                const eventDate = new Date(event.date);
+                const { status, class: statusClass } =
+                  getEventStatus(eventDate);
+
+                return (
+                  <Card
+                    key={event._id}
+                    className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 shadow-lg flex flex-col h-full"
+                  >
+                    <CardHeader className="pb-4">
+                      <div className="flex justify-between items-center mb-2">
+                        {/* Status badge */}
+                        <Badge
+                          className={`${statusClass} font-medium text-sm px-3 py-1 rounded-lg`}
+                        >
+                          {status}
+                        </Badge>
+
+                        {/* Right section: Date + Eye icon */}
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          {/* Date */}
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                            <span>{formatDate(event.date)}</span>
+                          </div>
+
+                          {/* Eye button */}
+                          <button
+                            onClick={() => navigate(`/events/${event._id}`)}
+                            className="text-gray-500 hover:text-purple-600 transition-colors p-1 rounded hover:bg-gray-100"
+                            title="View details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
-                    </div>
-                    <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
-                      {event.title}
-                    </CardTitle>
-                    <CardDescription className="text-sm text-gray-600">
-                      by {event.createdBy.name}
-                    </CardDescription>
-                  </CardHeader>
+                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
+                        {event.title}
+                      </CardTitle>
+                      <CardDescription className="text-sm text-gray-600">
+                        by {event.createdBy.name}
+                      </CardDescription>
+                    </CardHeader>
 
-                  <CardContent className="flex-grow">
-                    <p className="text-gray-700 mb-4 line-clamp-3">
-                      {event.description}
-                    </p>
+                    <CardContent className="flex-grow">
+                      <p className="text-gray-700 mb-4 line-clamp-3">
+                        {event.description}
+                      </p>
 
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Clock className="h-4 w-4 mr-2 text-purple-500" />
-                        {to12Hour(event?.date)}
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Clock className="h-4 w-4 mr-2 text-purple-500" />
+                          {to12Hour(event?.date)}
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <MapPin className="h-4 w-4 mr-2 text-purple-500" />
+                          <span className="line-clamp-1">{event.location}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Users className="h-4 w-4 mr-2 text-purple-500" />
+                          {event.attendeeCount} attendees
+                        </div>
                       </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="h-4 w-4 mr-2 text-purple-500" />
-                        <span className="line-clamp-1">{event.location}</span>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Users className="h-4 w-4 mr-2 text-purple-500" />
-                        {event.attendeeCount} attendees
-                      </div>
-                    </div>
-                  </CardContent>
+                    </CardContent>
 
-                  <CardFooter className="mt-auto py-4 px-6 border-t">
-                    <div className="flex justify-between w-full gap-2">
-                      <Link to={`/events/${event._id}`} className="flex-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full flex items-center justify-center border-blue-200 text-blue-600 hover:bg-blue-50"
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                      </Link>
-
-                      <Link
-                        to={`/update-event/${event._id}`}
-                        className="flex-1"
-                      >
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full border-green-200 text-green-600 hover:bg-green-50"
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Update
-                        </Button>
-                      </Link>
-
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
+                    <CardFooter className="mt-auto py-4 px-6 border-t">
+                      <div className="flex justify-between w-full gap-2">
+                        <Link to={`/events/${event._id}`} className="flex-1">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                            className="w-full flex items-center justify-center border-blue-200 text-blue-600 hover:bg-blue-50"
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Event</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{event.title}"?
-                              This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteEvent(event._id)}
-                              className="bg-red-600 hover:bg-red-700"
+                        </Link>
+
+                        <Link
+                          to={`/update-event/${event._id}`}
+                          className="flex-1"
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full border-green-200 text-green-600 hover:bg-green-50"
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Update
+                          </Button>
+                        </Link>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full border-red-200 text-red-600 hover:bg-red-50"
                             >
+                              <Trash2 className="h-4 w-4 mr-1" />
                               Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{event.title}"?
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteEvent(event._id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
 
             {/* Pagination */}

@@ -125,6 +125,24 @@ export const FeaturedEvents = () => {
     );
   }
 
+  const getEventStatus = (eventDate: Date) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const eventDay = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate()
+    );
+
+    if (eventDay < today) {
+      return { status: "Passed", class: "bg-gray-100 text-gray-800" };
+    } else if (eventDay.getTime() === today.getTime()) {
+      return { status: "Ongoing", class: "bg-blue-100 text-blue-800" };
+    } else {
+      return { status: "Upcoming", class: "bg-green-100 text-green-800" };
+    }
+  };
+
   return (
     <div className="py-16 bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -141,22 +159,8 @@ export const FeaturedEvents = () => {
         {events.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {events.map((event) => {
-              // Determine event status
-              const now = new Date();
               const eventDate = new Date(event.date);
-              let status = "";
-              let statusClass = "";
-
-              if (eventDate < now) {
-                status = "Passed";
-                statusClass = "bg-gray-100 text-gray-800";
-              } else if (eventDate.toDateString() === now.toDateString()) {
-                status = "Ongoing";
-                statusClass = "bg-blue-100 text-blue-800";
-              } else {
-                status = "Upcoming";
-                statusClass = "bg-green-100 text-green-800";
-              }
+              const { status, class: statusClass } = getEventStatus(eventDate);
               return (
                 <Card
                   key={event._id}

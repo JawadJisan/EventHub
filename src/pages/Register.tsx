@@ -149,7 +149,7 @@ const Register = () => {
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <User className="absolute left-3 top-3 h-4 w-4 text-black" />
                 <Input
                   id="name"
                   name="name"
@@ -157,7 +157,7 @@ const Register = () => {
                   placeholder="Enter your full name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`pl-10 bg-white/50 backdrop-blur-sm ${
+                  className={`pl-10 bg-white/50  ${
                     errors.name ? "border-red-500" : "border-gray-200"
                   }`}
                 />
@@ -170,7 +170,7 @@ const Register = () => {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-black" />
                 <Input
                   id="email"
                   name="email"
@@ -178,7 +178,7 @@ const Register = () => {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`pl-10 bg-white/50 backdrop-blur-sm ${
+                  className={`pl-10 bg-white/50 text-black ${
                     errors.email ? "border-red-500" : "border-gray-200"
                   }`}
                 />
@@ -191,7 +191,7 @@ const Register = () => {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-black" />
                 <Input
                   id="password"
                   name="password"
@@ -199,14 +199,14 @@ const Register = () => {
                   placeholder="Create a password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`pl-10 pr-10 bg-white/50 backdrop-blur-sm ${
+                  className={`pl-10 pr-10 bg-white/50 text-black ${
                     errors.password ? "border-red-500" : "border-gray-200"
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-3 text-black hover:text-gray-600"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -223,7 +223,7 @@ const Register = () => {
             <div className="space-y-2">
               <Label htmlFor="photoURL">Photo URL (Optional)</Label>
               <div className="relative">
-                <Image className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Image className="absolute left-3 top-3 h-4 w-4 text-black" />
                 <Input
                   id="photoURL"
                   name="photoURL"
@@ -231,7 +231,7 @@ const Register = () => {
                   placeholder="Enter your photo URL"
                   value={formData.photoURL}
                   onChange={handleInputChange}
-                  className={`pl-10 bg-white/50 backdrop-blur-sm ${
+                  className={`pl-10 bg-white/50 text-black ${
                     errors.photoURL ? "border-red-500" : "border-gray-200"
                   }`}
                 />

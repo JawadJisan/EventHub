@@ -147,12 +147,6 @@ EventHub is fully responsive and optimized for:
 - **Tablet** - Adapted layouts and navigation
 - **Mobile** - Touch-optimized interface
 
-## 🚀 Deployment
-
-### Lovable Platform
-Deploy instantly using the Lovable platform:
-1. Click the "Publish" button in the Lovable editor
-2. Your app will be live at `yoursite.lovable.app`
 
 ### Custom Domain
 Connect your own domain through Project Settings > Domains (requires paid plan)

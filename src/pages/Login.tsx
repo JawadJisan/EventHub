@@ -104,14 +104,14 @@ const Login = () => {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-black" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`pl-10 bg-white/50 backdrop-blur-sm ${
+                  className={`pl-10 bg-white/50  ${
                     errors.email ? "border-red-500" : "border-gray-200"
                   }`}
                 />
@@ -124,14 +124,14 @@ const Login = () => {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-black" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`pl-10 pr-10 bg-white/50 backdrop-blur-sm ${
+                  className={`pl-10 pr-10 bg-white/50  ${
                     errors.password ? "border-red-500" : "border-gray-200"
                   }`}
                 />

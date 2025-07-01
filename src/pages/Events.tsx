@@ -220,7 +220,23 @@ const Events = () => {
     );
   }
 
-  console.log("All Events:", events);
+  const getEventStatus = (eventDate: Date) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const eventDay = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate()
+    );
+
+    if (eventDay < today) {
+      return { status: "Passed", class: "bg-gray-100 text-gray-800" };
+    } else if (eventDay.getTime() === today.getTime()) {
+      return { status: "Ongoing", class: "bg-blue-100 text-blue-800" };
+    } else {
+      return { status: "Upcoming", class: "bg-green-100 text-green-800" };
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
@@ -345,22 +361,26 @@ const Events = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {events.map((event) => {
-                // Determine event status
-                const now = new Date();
-                const eventDate = new Date(event.date);
-                let status = "";
-                let statusClass = "";
+                // // Determine event status
+                // const now = new Date();
+                // const eventDate = new Date(event.date);
+                // let status = "";
+                // let statusClass = "";
 
-                if (eventDate < now) {
-                  status = "Passed";
-                  statusClass = "bg-gray-100 text-gray-800";
-                } else if (eventDate.toDateString() === now.toDateString()) {
-                  status = "Ongoing";
-                  statusClass = "bg-blue-100 text-blue-800";
-                } else {
-                  status = "Upcoming";
-                  statusClass = "bg-green-100 text-green-800";
-                }
+                // if (eventDate < now) {
+                //   status = "Passed";
+                //   statusClass = "bg-gray-100 text-gray-800";
+                // } else if (eventDate.toDateString() === now.toDateString()) {
+                //   status = "Ongoing";
+                //   statusClass = "bg-blue-100 text-blue-800";
+                // } else {
+                //   status = "Upcoming";
+                //   statusClass = "bg-green-100 text-green-800";
+                // }
+
+                const eventDate = new Date(event.date);
+                const { status, class: statusClass } =
+                  getEventStatus(eventDate);
 
                 return (
                   <Card
@@ -368,26 +388,6 @@ const Events = () => {
                     className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 shadow-lg flex flex-col h-full"
                   >
                     <CardHeader className="pb-4">
-                      {/* <div className="flex justify-between items-start mb-2">
-                        <Badge className={`${statusClass} font-medium`}>
-                          {status}
-                        </Badge>
-                        <div className="flex items-center">
-                          <button
-                            onClick={() => navigate(`/events/${event._id}`)}
-                            className="text-gray-500 hover:text-purple-600 transition-colors mr-2"
-                            title="View details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <div className="text-right text-sm text-gray-500">
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              {formatDate(event.date)}
-                            </div>
-                          </div>
-                        </div>
-                      </div> */}
                       <div className="flex justify-between items-center mb-2">
                         {/* Status badge */}
                         <Badge
