@@ -1,6 +1,12 @@
 
 # EventHub - Event Management Web Application
 
+[Backend GitHub Link](https://github.com/JawadJisan/EventHub_Server)
+[Backend Live URL](https://event-hub-server-alpha.vercel.app/)
+
+<!-- ### Backend GitHub Link: https://github.com/JawadJisan/EventHub_Server
+### Backend Live URL: https://event-hub-server-alpha.vercel.app/ -->
+
 <!-- ![EventHub Logo](https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&h=400&fit=crop) -->
 ![EventHub Hero](public/hero.png)
 <!-- ![Alt text](/hero.png) -->
