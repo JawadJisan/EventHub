@@ -2,7 +2,8 @@
 # EventHub - Event Management Web Application
 
 <!-- ![EventHub Logo](https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&h=400&fit=crop) -->
-![EventHub Logo](/hero.png)
+![Alt text](public/hero.png)
+![Alt text](/hero.png)
 
 
 ## 🌟 Overview
